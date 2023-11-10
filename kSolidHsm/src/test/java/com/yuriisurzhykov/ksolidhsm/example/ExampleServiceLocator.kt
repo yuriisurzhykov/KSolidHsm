@@ -2,19 +2,20 @@ package com.yuriisurzhykov.ksolidhsm.example
 
 import com.yuriisurzhykov.ksolidhsm.context.ServiceLocator
 
-interface CheckHasSavedScore {
+interface CheckHasSavedScoreUseCase {
     suspend fun savedScoreValue(): Int
 
-    class Base : CheckHasSavedScore {
+    class Base : CheckHasSavedScoreUseCase {
         override suspend fun savedScoreValue(): Int = 0
     }
 }
 
 interface ExampleServiceLocator : ServiceLocator {
 
-    fun checkHasSavedScoreUseCase(): CheckHasSavedScore
+    fun checkHasSavedScoreUseCase(): CheckHasSavedScoreUseCase
 
     class Base : ExampleServiceLocator {
-        override fun checkHasSavedScoreUseCase(): CheckHasSavedScore = CheckHasSavedScore.Base()
+        override fun checkHasSavedScoreUseCase(): CheckHasSavedScoreUseCase =
+            CheckHasSavedScoreUseCase.Base()
     }
 }

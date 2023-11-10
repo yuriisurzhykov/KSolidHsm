@@ -7,7 +7,7 @@ import com.yuriisurzhykov.ksolidhsm.context.StateMachineContext
 import com.yuriisurzhykov.ksolidhsm.extentions.ignore
 import com.yuriisurzhykov.ksolidhsm.extentions.transitionTo
 import com.yuriisurzhykov.ksolidhsm.extentions.unknown
-import com.yuriisurzhykov.ksolidhsm.strategy.ProcessResult
+import com.yuriisurzhykov.ksolidhsm.strategy.EventProcessResult
 
 abstract class ExampleStates : State.Normal {
 
@@ -39,7 +39,7 @@ internal class App : ExampleStates(null, Menu()) {
     override suspend fun processEvent(
         event: Event,
         context: StateMachineContext
-    ): ProcessResult = ignore()
+    ): EventProcessResult = ignore()
 }
 
 class Menu : ExampleStates({ App() }) {
@@ -47,7 +47,7 @@ class Menu : ExampleStates({ App() }) {
     override suspend fun processEvent(
         event: Event,
         context: StateMachineContext
-    ): ProcessResult =
+    ): EventProcessResult =
         if (event is ExampleEvents.Play) transitionTo(Play())
         else unknown(event)
 }
@@ -60,7 +60,7 @@ class Play : ExampleStates(App(), Ping()) {
         context.operateStateMachine().nextState(Ping())
     }
 
-    override suspend fun processEvent(event: Event, context: StateMachineContext): ProcessResult =
+    override suspend fun processEvent(event: Event, context: StateMachineContext): EventProcessResult =
         if (event is ExampleEvents.Menu) transitionTo(Menu())
         else unknown(event)
 
@@ -71,7 +71,7 @@ class Ping : ExampleStates({ Play() }) {
     override suspend fun processEvent(
         event: Event,
         context: StateMachineContext
-    ): ProcessResult =
+    ): EventProcessResult =
         if (event is ExampleEvents.Pong) transitionTo(Pong())
         else unknown(event)
 }
@@ -80,7 +80,7 @@ class Pong : ExampleStates(Play()) {
     override suspend fun processEvent(
         event: Event,
         context: StateMachineContext
-    ): ProcessResult =
+    ): EventProcessResult =
         if (event is ExampleEvents.Ping) transitionTo(Ping())
         else unknown(event)
 }

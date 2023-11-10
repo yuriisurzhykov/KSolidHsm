@@ -7,11 +7,11 @@ import com.yuriisurzhykov.ksolidhsm.context.StateMachineContext
 import com.yuriisurzhykov.ksolidhsm.exceptions.RecursiveHierarchyException
 
 
-sealed interface ProcessResult {
+sealed interface EventProcessResult {
 
     suspend fun execute(context: StateMachineContext)
 
-    data class TransitionTo(private val state: State) : ProcessResult {
+    data class TransitionTo(private val state: State) : EventProcessResult {
         @OptIn(DelicateStateMachineApi::class)
         override suspend fun execute(context: StateMachineContext) {
             context.operateStateMachine().nextState(state)
@@ -21,7 +21,7 @@ sealed interface ProcessResult {
     data class Unknown(
         private val event: Event,
         private val currentState: State.Normal
-    ) : ProcessResult {
+    ) : EventProcessResult {
         override suspend fun execute(context: StateMachineContext) {
             if (currentState.hasParent()) {
                 val parent = currentState.parent()
@@ -36,9 +36,19 @@ sealed interface ProcessResult {
         }
     }
 
-    data object Ignore : ProcessResult {
+    data object Ignore : EventProcessResult {
         override suspend fun execute(context: StateMachineContext) {
             // Do nothing because we ignored an event
+        }
+    }
+
+    class Handled(
+        private val eventOperation: (suspend (StateMachineContext) -> Unit)? = null
+    ) : EventProcessResult {
+        override suspend fun execute(context: StateMachineContext) {
+            // Execute operation, if not null
+            eventOperation?.invoke(context)
+            // Then do nothing because we ignored an event
         }
     }
 }

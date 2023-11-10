@@ -8,7 +8,7 @@ import com.yuriisurzhykov.ksolidhsm.context.OperateStateMachine
 import com.yuriisurzhykov.ksolidhsm.context.ServiceLocator
 import com.yuriisurzhykov.ksolidhsm.context.StateMachineContext
 import com.yuriisurzhykov.ksolidhsm.extentions.ignore
-import com.yuriisurzhykov.ksolidhsm.strategy.ProcessResult
+import com.yuriisurzhykov.ksolidhsm.strategy.EventProcessResult
 
 /**
  *  A `State` represents a distinct condition or configuration within a state machine, reflecting
@@ -75,7 +75,7 @@ interface State {
      *  to process event and do not change state of state machine just return `this` and state
      *  will not be changed.
      * */
-    suspend fun processEvent(event: Event, context: StateMachineContext): ProcessResult
+    suspend fun processEvent(event: Event, context: StateMachineContext): EventProcessResult
 
 
     /**
@@ -132,7 +132,7 @@ interface State {
                 override suspend fun processEvent(
                     event: Event,
                     context: StateMachineContext
-                ): ProcessResult = ProcessResult.Ignore
+                ): EventProcessResult = EventProcessResult.Ignore
             }
         }
 
@@ -181,7 +181,7 @@ interface State {
         final override suspend fun processEvent(
             event: Event,
             context: StateMachineContext
-        ): ProcessResult = ignore()
+        ): EventProcessResult = ignore()
 
         /**
          *  Defines the transition during initialization to be made from this state, if any.
