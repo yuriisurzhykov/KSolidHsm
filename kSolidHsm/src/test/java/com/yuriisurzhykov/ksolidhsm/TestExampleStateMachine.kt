@@ -24,7 +24,9 @@ class TestExampleStateMachine : AbstractTest() {
 
     @Test
     fun `test initial onEnter calls count`() = runTest {
-        val state = App()
+        val state = App
+        state.enterCallCount = 0
+
         val stateMachine = ExampleStateMachine(state)
         stateMachine.initialize()
 
@@ -36,7 +38,11 @@ class TestExampleStateMachine : AbstractTest() {
 
     @Test
     fun `test initial onEnter calls count for Menu`() = runTest {
+        Menu.enterCallCount = 0
+        App.enterCallCount = 0
+
         val stateMachine = ExampleStateMachine()
+
         stateMachine.initialize()
 
         val currentState = stateMachine.current().value as Menu
@@ -48,7 +54,7 @@ class TestExampleStateMachine : AbstractTest() {
 
     @Test
     fun `test initial onExit calls count for App state`() = runTest {
-        val state = App()
+        val state = App
         val stateMachine = ExampleStateMachine(state)
         stateMachine.initialize()
 
@@ -63,7 +69,7 @@ class TestExampleStateMachine : AbstractTest() {
         val stateMachine = ExampleStateMachine()
         stateMachine.initialize()
 
-        val expected = Menu()
+        val expected = Menu
         val actual = stateMachine.current().value
         assertEquals(expected, actual)
         actual as ExampleStates
@@ -71,12 +77,12 @@ class TestExampleStateMachine : AbstractTest() {
 
     @Test
     fun `test from menu to play on Play event`() = runTest {
-        val stateMachine = ExampleStateMachine(Menu())
+        val stateMachine = ExampleStateMachine(Menu)
         stateMachine.initialize()
 
         stateMachine.processEvent(ExampleEvents.Play)
 
-        val expected = Ping()
+        val expected = Ping
         val actual = stateMachine.current().value
         assertEquals(expected, actual)
         actual as ExampleStates
@@ -84,12 +90,12 @@ class TestExampleStateMachine : AbstractTest() {
 
     @Test
     fun `test from game to menu on Menu event`() = runTest {
-        val stateMachine = ExampleStateMachine(Ping())
+        val stateMachine = ExampleStateMachine(Ping)
         stateMachine.initialize()
 
         stateMachine.processEvent(ExampleEvents.Menu)
 
-        val expected = Menu()
+        val expected = Menu
         val actual = stateMachine.current().value
         assertEquals(expected, actual)
         actual as ExampleStates
@@ -97,12 +103,12 @@ class TestExampleStateMachine : AbstractTest() {
 
     @Test
     fun `test from Ping state to Pong on Pong event`() = runTest {
-        val stateMachine = ExampleStateMachine(Ping())
+        val stateMachine = ExampleStateMachine(Ping)
         stateMachine.initialize()
 
         stateMachine.processEvent(ExampleEvents.Pong)
 
-        val expected = Pong()
+        val expected = Pong
         val actual = stateMachine.current().value
         assertEquals(expected, actual)
         actual as ExampleStates
@@ -110,12 +116,12 @@ class TestExampleStateMachine : AbstractTest() {
 
     @Test
     fun `test from Pong state to Ping on Ping event`() = runTest {
-        val stateMachine = ExampleStateMachine(Ping())
+        val stateMachine = ExampleStateMachine(Ping)
         stateMachine.initialize()
 
         stateMachine.processEvent(ExampleEvents.Pong)
 
-        val expected = Pong()
+        val expected = Pong
         val actual = stateMachine.current().value
         assertEquals(expected, actual)
         actual as ExampleStates

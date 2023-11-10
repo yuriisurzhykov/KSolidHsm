@@ -1,6 +1,6 @@
 package com.yuriisurzhykov.ksolidhsm.context
 
-import com.yuriisurzhykov.ksolidhsm.State
+import com.yuriisurzhykov.ksolidhsm.states.State
 import com.yuriisurzhykov.ksolidhsm.StateMachine
 
 interface OperateStateMachine {

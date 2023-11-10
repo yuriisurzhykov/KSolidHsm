@@ -7,6 +7,8 @@ import com.yuriisurzhykov.ksolidhsm.context.ServiceLocator
 import com.yuriisurzhykov.ksolidhsm.context.StateMachineContext
 import com.yuriisurzhykov.ksolidhsm.exceptions.IllegalInheritanceException
 import com.yuriisurzhykov.ksolidhsm.exceptions.StateMachineInitializedException
+import com.yuriisurzhykov.ksolidhsm.states.InitialTransitionState
+import com.yuriisurzhykov.ksolidhsm.states.State
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,7 +71,7 @@ interface StateMachine : OperateStateMachine, ContextProvider {
         final override suspend fun initialize() {
             if (!hasInitialized) {
                 val currentState = state.value
-                currentState.onEnter(context)
+                doStateEnter(currentState)
                 hasInitialized = true
             } else throw StateMachineInitializedException(this::class.simpleName.orEmpty())
         }
@@ -83,10 +85,19 @@ interface StateMachine : OperateStateMachine, ContextProvider {
             if (nextState != state.value) {
                 state.value.onExit(context)
                 state.emit(nextState)
-                state.value.onEnter(context)
+                doStateEnter(nextState)
             }
         }
 
         override fun current(): StateFlow<State> = state.asStateFlow()
+
+        @OptIn(DelicateStateMachineApi::class)
+        private suspend fun doStateEnter(state: State) {
+            state.onEnter(context)
+            if (state is InitialTransitionState) {
+                val stateToGo = state.initialTransitionState(context)
+                if (stateToGo != null) nextState(stateToGo)
+            }
+        }
     }
 }

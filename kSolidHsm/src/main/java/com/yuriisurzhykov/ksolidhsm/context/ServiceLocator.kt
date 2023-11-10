@@ -6,7 +6,7 @@ package com.yuriisurzhykov.ksolidhsm.context
  *  interfaces and gives them to everyone who is interested in them.
  *  Because of each state machine may use different UseCases, different utils
  *  classes, so this [ServiceLocator] implementations provides correct dependencies
- *  to every part.
+ *  for every part.
  *  [ServiceLocator] is just an empty interface that provides nothing by default.
  *  To use this class, you have to create your own interface and inherit it from
  *  this one.
@@ -20,8 +20,8 @@ package com.yuriisurzhykov.ksolidhsm.context
  *      }
  *  }
  *  ```
- *  After this for your state machine you provide implementation for your general
- *  [ServiceLocator] interface.
+ *  After you defined [ServiceLocator] for your state machine you have to provide instance of your
+ *  service locator to constructor of your state machine.
  * */
 interface ServiceLocator {
 

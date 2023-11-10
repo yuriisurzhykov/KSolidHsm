@@ -1,7 +1,7 @@
 package com.yuriisurzhykov.ksolidhsm.strategy
 
 import com.yuriisurzhykov.ksolidhsm.Event
-import com.yuriisurzhykov.ksolidhsm.State
+import com.yuriisurzhykov.ksolidhsm.states.State
 import com.yuriisurzhykov.ksolidhsm.context.DelicateStateMachineApi
 import com.yuriisurzhykov.ksolidhsm.context.StateMachineContext
 import com.yuriisurzhykov.ksolidhsm.exceptions.RecursiveHierarchyException

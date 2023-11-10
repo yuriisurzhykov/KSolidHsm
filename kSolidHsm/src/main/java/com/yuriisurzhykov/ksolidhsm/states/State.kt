@@ -1,13 +1,14 @@
-package com.yuriisurzhykov.ksolidhsm
+package com.yuriisurzhykov.ksolidhsm.states
 
-import com.yuriisurzhykov.ksolidhsm.State.Initial
-import com.yuriisurzhykov.ksolidhsm.State.Normal
-import com.yuriisurzhykov.ksolidhsm.State.Transient
+import com.yuriisurzhykov.ksolidhsm.Event
+import com.yuriisurzhykov.ksolidhsm.StateMachine
+import com.yuriisurzhykov.ksolidhsm.states.State.Initial
+import com.yuriisurzhykov.ksolidhsm.states.State.Normal
+import com.yuriisurzhykov.ksolidhsm.states.State.Transient
 import com.yuriisurzhykov.ksolidhsm.context.DelicateStateMachineApi
 import com.yuriisurzhykov.ksolidhsm.context.OperateStateMachine
 import com.yuriisurzhykov.ksolidhsm.context.ServiceLocator
 import com.yuriisurzhykov.ksolidhsm.context.StateMachineContext
-import com.yuriisurzhykov.ksolidhsm.extentions.ignore
 import com.yuriisurzhykov.ksolidhsm.strategy.EventProcessResult
 
 /**
@@ -83,35 +84,25 @@ interface State {
      *  In addition to these functions it also provides convenience way for accessing specific
      *  implementation of [ServiceLocator]
      *  @property parent The parent state in hierarchy that has additional logic for handling events
-     *  @property initialTransitionRef State to go to during [onEnter] call
      * */
-    abstract class Normal : State {
+    abstract class Normal : State, InitialTransitionState {
 
         private val parentRef: Lazy<State?>
-        private val initialTransitionRef: Lazy<State?>
 
-        constructor(parent: State?, initialTransition: State? = null) {
+        constructor(parent: State?) {
             parentRef = lazy { parent }
-            initialTransitionRef = lazy { initialTransition }
         }
 
-        constructor(parentInit: () -> State?, initialTransition: () -> State? = { null }) {
+        constructor(parentInit: () -> State?) {
             parentRef = lazy { parentInit.invoke() }
-            initialTransitionRef = lazy { initialTransition.invoke() }
         }
 
         /**
-         *  Abstract implementation for [onEnter] logic is to check is property [initialTransitionRef]
-         *  is null and if it not, then do transition to the provided transitive state.
-         *  You still may override this function, and depends on your logic you may call
-         *  super.onEnter(context) before your logic, or after depends on what you want to achieve.
+         *  Abstract implementation for [onEnter] is to do nothing, just to not force user to
+         *  override this function in every case but only if user have to do something on entering
+         *  state.
          * */
-        @OptIn(DelicateStateMachineApi::class)
         override suspend fun onEnter(context: StateMachineContext) {
-            val initialTransition = initialTransitionRef.value
-            if (initialTransition != null) {
-                context.operateStateMachine().nextState(initialTransition)
-            }
         }
 
         /**
@@ -123,20 +114,21 @@ interface State {
         override suspend fun onExit(context: StateMachineContext) {}
 
         /**
+         * Returns null by default to not force to override this method, but provides ability to
+         * define initial transition for end-user.
+         * */
+        override suspend fun initialTransitionState(context: StateMachineContext): State? = null
+
+        /**
          *  Provides reference to parent. If [parent] property is null, then it will create empty
          *  (`dummy`) object that provides empty implementation for [processEvent]
          * */
-        fun parent(): State {
+        internal fun parent(): State {
             val parent = parentRef.value
-            return parent ?: object : Normal(null) {
-                override suspend fun processEvent(
-                    event: Event,
-                    context: StateMachineContext
-                ): EventProcessResult = EventProcessResult.Ignore
-            }
+            return parent ?: EmptyState()
         }
 
-        fun hasParent() = parentRef.value != null
+        internal fun hasParent() = parentRef.value != null
 
         /**
          *  Provides a typed [ServiceLocator] instance from the [context].
@@ -172,7 +164,7 @@ interface State {
      *  with `final` modifier so children are not allowed to override them and place the process
      *  event logic.
      */
-    abstract class Transient : Normal(null) {
+    abstract class Transient : State {
 
         /**
          *  Overrides the [processEvent] and [onEnter] function in order to prevent unnecessary
@@ -181,7 +173,7 @@ interface State {
         final override suspend fun processEvent(
             event: Event,
             context: StateMachineContext
-        ): EventProcessResult = ignore()
+        ): EventProcessResult = EventProcessResult.Ignore
 
         /**
          *  Defines the transition during initialization to be made from this state, if any.
@@ -194,6 +186,9 @@ interface State {
         @OptIn(DelicateStateMachineApi::class)
         override suspend fun onEnter(context: StateMachineContext) {
             context.operateStateMachine().nextState(initialTransitionState(context))
+        }
+
+        override suspend fun onExit(context: StateMachineContext) {
         }
     }
 }
