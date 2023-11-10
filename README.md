@@ -76,13 +76,17 @@ Service Locator – in simple words it is a pattern that defines how to provide 
 
 ## State Machine library diagram
 
-For better understanding of what is the structure of stateMachine library you can see the diagram that represents classes and interfaces that stateMachine library has. 
+For better understanding of what is the structure of stateMachine library you can see the diagram that represents classes and interfaces that stateMachine library has.
 
-<img src="https://github.com/yuriysurzhikov/KSolidHsm/assets/44873047/44143072-c73f-4bbf-bc2e-e44fbf2eedfd" width="300" height="240" alt="State Machine library class diagram">
+<img src="https://github.com/yuriysurzhikov/KSolidHsm/assets/44873047/fe055e1d-2aaa-4a89-927f-0c350392f195" width="300" height="240" alt="State Machine library class diagram">
 
 Also, for better understanding of how new states applied to StateMachine below diagram describes how does processing event works in StateMachine and how new states are applied to StateMachine.
 
 <img src="https://github.com/yuriysurzhikov/KSolidHsm/assets/44873047/78389796-823a-47d2-afa3-8c0aee5f19f3" width="300" height="200" alt="Processing event with further transition">
+
+More detaild diagram with description of how initial transition is made:
+
+<img src="https://github.com/yuriysurzhikov/KSolidHsm/assets/44873047/18c139e3-94e0-48ea-91b0-75ae9200ba67" width="300" height="270" alt="Processing event with further transition">
 
 # Coding documentation
 Coming soon
