@@ -1,12 +1,26 @@
 package com.yuriisurzhykov.ksolidhsm.strategy
 
 import com.yuriisurzhykov.ksolidhsm.Event
-import com.yuriisurzhykov.ksolidhsm.states.State
+import com.yuriisurzhykov.ksolidhsm.StateMachine
 import com.yuriisurzhykov.ksolidhsm.context.DelicateStateMachineApi
 import com.yuriisurzhykov.ksolidhsm.context.StateMachineContext
 import com.yuriisurzhykov.ksolidhsm.exceptions.RecursiveHierarchyException
+import com.yuriisurzhykov.ksolidhsm.states.State
+import com.yuriisurzhykov.ksolidhsm.strategy.EventProcessResult.Handled
+import com.yuriisurzhykov.ksolidhsm.strategy.EventProcessResult.Ignore
+import com.yuriisurzhykov.ksolidhsm.strategy.EventProcessResult.TransitionTo
 
-
+/**
+ *  ProcessResult is a strategy pattern for processing events. When [State] consume [Event],
+ *  the last one should return result of what to do after checking the type of event.
+ *  There 3 main strategies:
+ *  - [TransitionTo] moves [StateMachine] to the state provided in [TransitionTo.state].
+ *  - [Unknown] causes [StateMachine] to talk to [State] parent if it exists, and calls [State.processEvent]
+ *  on parent state.
+ *  - [Ignore] does nothing, indicates only that event is processed and everything is ok.
+ *  - [Handled] does nothing with an event, but executes [Handled.eventOperation] when strategy is
+ *  being executed.
+ * */
 sealed interface EventProcessResult {
 
     suspend fun execute(context: StateMachineContext)
