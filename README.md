@@ -27,7 +27,7 @@ Every state must override the processEvent() function and provide the result of 
 
 **Ignored** – the implementation for this class is to do nothing. This class is just to say to State Machine that we handled an event and the state machine should do nothing for this event
 
-For more clear code, for each of ProcessResult strategies it created 3 corresponding functions: transitionTo(), unhandled() and handled().This functions would help you to write more readable and clear code.
+For more clear code, for each of ProcessResult strategies it created 3 corresponding functions: `transitionTo()`, `unknown()` and `ignore()`.This functions would help you to write more readable and clear code.
 
 ### Transient
 
