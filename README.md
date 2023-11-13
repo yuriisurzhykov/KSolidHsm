@@ -89,4 +89,286 @@ More detaild diagram with description of how initial transition is made:
 <img src="https://github.com/yuriysurzhikov/KSolidHsm/assets/44873047/18c139e3-94e0-48ea-91b0-75ae9200ba67" width="300" height="270" alt="Processing event with further transition">
 
 # Coding documentation
-Coming soon
+## Creation of HSM
+To create an HSM, you have to declare an HSM class, a `ServiceLocator`, and each state for your state machine. The following steps describe how to code a state machine to implement an HSM diagram.
+
+## Coding the states
+As mentioned above, on diagram a state might be ordinary(`State.Normal` in code), transient that doesn't consume any events and just switches to new state immediately, and hierarchical that has parent and may talk to parent to process event. In addition, you may have a situation where a state might be a parent and also it might have  initial transition to child state. So, let's take a look on how to code all of these situations:
+
+### Ordinary states without parent
+To create ordinary state without hierarchy(without parent) you have to:
+
+- Create state class that corresponds your HSM state. Your class has to be a Kotlin object so that your class declaration be object StateName;
+- Inherit this class from State.Normal() class
+- Pass null to Normal’s constructor for parent property
+- Then Android Studio will require you to override the processEvent function.
+- In processEvent body write your condition for required event for your state and return result:
+  - If you handled event and want to move to a new state return transitionTo(NewStateName)
+  - If you handled event, but want to do nothing, then return handled()
+  - If your state don’t know about event came to it, then just return unhandled(event)
+
+Here is an example for default state that processes only one event AlarmEvents.ProgrammingModeEnd and then returns transition to VirtualDisarmed state on this event:
+```kotlin
+class Inactive : State.Normal(null) {
+
+    override suspend fun processEvent(event: Event, context: StateMachineContext): State {
+        return when {
+            event is AlarmEvents.ProgrammingModeEnd && hasZones(context) -> transitionTo(VirtualDisarmed)
+            else -> unhandled(event)
+        }
+    }
+
+    private suspend fun hasZones(context: StateMachineContext): Boolean {
+        return serviceLocator<AlarmServiceLocator>(context)
+            .checkHasZonesUseCase()
+            .hasZones()
+    }
+}
+```
+### Hierarchical states(with parent)
+If your state should have parent, you have to follow steps:
+- Create class for parent and define it as a normal state
+- Create processEvent logic for parent state
+- Create new class for your state, that you intended to create and inherit your class also from State.Normal()
+- Pass an instance of parent class, that you just created, as a constructor parameter to `State.Normal(ParentState)` (don’t use parentheses because class should be declared as an object)
+- Implement your processEvent logic and, if it required, override `onEnter`/`onExit` functions.
+- When you create logic to process all of events that current state needs to handle, then in else branch add `unhandled(event)`
+```kotlin
+object YourParentState : State.Normal(null) {
+
+    override fun processEvent(event: Event): State {
+        return transitionTo(YourNextState)
+    }
+}
+
+object ChildStateOne : State.Normal(YourParentState) {
+    override fun processEvent(event: Event): State {
+        return when(event) {
+            is OtherEventType -> transitionTo(OtherNextState)
+            else -> unhandled(event)
+        }
+    }
+}
+```
+### Parent state that has initial transition
+If your parent has initial transition, when you declare your parent state, pass null for parent, override `initialTransitionState()` method and return the state your want to move to. The `State.Normal` will trigger initial transition to the provided state right after execution of `onEnter()`, if you return any State other then null.
+```kotlin
+object StateAfterInitialTransition : State.Normal(null) {
+    override suspend fun processEvent(event: Event, context: StateMachineContext): State {
+        return YourSomeNewState
+    }
+}
+
+object ParentWithTransition : State.Normal(null) {
+    
+    override suspend fun initialTransitionState() = StateAfterInitialTransition
+    
+    override suspend fun processEvent(event: Event, context: StateMachineContext): State {
+        return YourAdditionalState
+    }
+}
+```
+### Transient state
+As mentioned, a Transient state is a state that has no events to process, it simply switches to a new state when it itself is applied to the state machine.
+To create transient state you have to:
+- First of all define non-transient state to move to, using the descriptions above
+- After create class for transient state
+- After you declared class inherit your class from State.Transient()
+- Override `initialTransitionState()` method and provide state to move to
+```kotlin
+object TransientReadyCheck : State.Transient() {
+
+    override suspend fun initialTransitionState(context: StateMachineContext): State {
+        return if (checkZonesReady(context)) Ready else NotReady
+    }
+
+    private suspend fun checkZonesReady(context: StateMachineContext): Boolean {
+        return serviceLocator<AlarmServiceLocator>(context)
+            .checkZonesReadyUseCase()
+            .allZonesReady()
+    }
+}
+```
+## Coding the ServiceLocator
+As you may noticed, in last example to run condition check checkZonesReady we call serviceLocator() method and then call available functions from it.
+
+Now simple example:
+![image](https://github.com/yuriysurzhikov/KSolidHsm/assets/44873047/f122c56e-34aa-48c7-8808-a3466dbb1fe0)
+
+
+On the diagram above we have red diamond choice block, and depends on we have zones or not, we go to one or to another state. We may write this logic  inside of the state to check is we have zones, but we don’t want to write code that will have duplicates or which is not testable. That is why we have to create a class, that does this check and gives us just a boolean result of checking. This means we have to create UseCase for this checking and declare function inside of it.
+
+```kotlin
+interface CheckHasZonesUseCase {
+  
+  suspend fun hasZones(): Boolean
+  
+  class Base: CheckHasZonesUseCase {
+    override suspend fun hasZones(): Boolean {
+      // do your check here
+    }
+  }
+}
+```
+After you created use case interface that performs check, you have to provide your implementation of use case in your service locator.
+
+If service locator have not defined yet, you have to create service locator for your state machine
+
+Create interface with the following name pattern: <state machine name>ServiceLocator
+
+Inherit your interface from the ServiceLocator interface
+
+Then when you have service locator for your certain state machine, declare function to provide your use case inside of your ServiceLocator interface
+
+Then if you don’t have implementation for your service locator interface, create class Base inside of interface
+
+After this provide instances for the classes that declared in interface. 
+
+The final interface of service locator may looks the following way: 
+
+
+Example of service locator
+
+```kotlin
+// Your use case interface
+interface CheckHasZonesUseCase {
+    suspend fun hasZones(): Boolean
+
+    // Some implementation for use case interface
+    class Base : CheckHasZonesUseCase {
+        override suspend fun hasZones(): Boolean {
+            TODO("Not yet implemented")
+        }
+    }
+}
+
+// Your service locator interface
+interface ExampleServiceLocator : ServiceLocator {
+
+    // Function for getting use case
+    fun checkHasZonesUseCase(): CheckHasZonesUseCase
+
+    // Default implementation for service locator
+    class Base : ExampleServiceLocator {
+        override fun checkHasZonesUseCase(): CheckHasZonesUseCase = CheckHasZonesUseCase.Base()
+    }
+}
+```
+Note: If you 100% sure, that you don’t need service locator, because you don’t have conditions on your diagram, then you may use ServiceLocator.Empty class as a dummy object to provide to StateMachine.Abstract() constructor, just to satisfy the compiler requirements. In other cases you must create service locator to make state machine as more testable as possible
+
+Coding the StateMachine
+Now, when you have everything read for state machine, i.e. you defined states, you defined service locator, after this you may define state machine class.
+
+Your state machine have to inherit StateMachine.Abstract() class and provide required resources to the Abstract’s constructor.
+
+
+Example of state machine class
+```kotlin
+class ExampleStateMachine(
+    initialState: State = YourInitialState()
+) : StateMachine.Abstract(initialState, ExampleServiceLocator.Base())
+```
+Example
+Now the simple example of how to create state machine
+
+For example we have the next state machine diagram:
+
+
+The logic of this diagram the following. The initial state of this state machine is App state which is transient state. When the state machine is initializing, it goes to Menu state. When the Menu state receives Play event the state machine moves to Play state, which is transient by itself and during the initializing it jump to Ping state. The Ping state listens for Pong event and once it occurred the state machine moves to Pong state. In addition, Ping and Pong states are derived states from Play state, that is Play is also hierarchical state that listens and reacts on Menu event and goes to Menu state when Menu event is occurred. 
+
+So lets code it. 
+
+Create events
+Let’s firstly create events that we want to handle. If you don’t know how to create events, read the documentation[1].
+
+
+Example of PingPong events
+Create states
+After we defined events, we have to create states according to the diagram. So, the hierarchy of state will be next:
+
+
+```
+App: State.Normal(null)
+  |___Menu: State.Normal(App)
+  |___Play: State.Normal(App)
+      |___Ping: State.Normal(Play)
+      |___Pong: State.Normal(Play)
+```
+And also we have the next transitions: 
+
+
+
+App → Menu
+Menu → Play
+Play → Ping
+Ping → Pong
+Pong → Ping
+Play → Menu
+
+Now let’s create classes for the states.
+
+Coded states
+```kotlin
+// Initial state that is transient
+object App : State.Transient() {
+
+    // On the diagram we have transition to Menu once the App is going 
+    // to be a current state
+    override suspend fun initialTransitionState(context: StateMachineContext) = Menu
+
+    object Menu : State.Normal(App) {
+
+        // When receive Play event then go to Play state
+        override suspend fun processEvent(event: Event, context: StateMachineContext): ProcessResult =
+            if (event is ExampleEvents.Play) transitionTo(Play)
+            else unhandled(event)
+    }
+
+    // Play is parent transitive state that is also a child of App, 
+    // so we pass App to be a parent
+    object Play : State.Normal(App) {
+    
+        override suspend fun initialTransitionState(context: StateMachineContext) = Ping
+
+        // Based on diagram it doesn't metter in what state we are, when the
+        // Menu event is occurred we have to go to Menu state
+        override suspend fun processEvent(event: Event, context: StateMachineContext): ProcessResult =
+            if (event is ExampleEvents.Menu) transitionTo(Menu)
+            else unhandled(event)
+
+        // Ping has Play as a parent so we pass this state
+        object Ping : State.Normal(Play) {
+            override suspend fun processEvent(
+                event: Event,
+                context: StateMachineContext
+            ): ProcessResult =
+                if (event is ExampleEvents.Pong) transitionTo(Pong)
+                else unhandled(event)
+        }
+
+        // Pong is also a child of Play
+        object Pong : State.Normal(Play) {
+            override suspend fun processEvent(
+                event: Event,
+                context: StateMachineContext
+            ): ProcessResult = if (event is ExampleEvents.Ping) transitionTo(Ping)
+            else unhandled(event)
+        }
+    }
+}
+```
+Create service locator
+For any check conditions inside of your state machine its preferred to create Service Locator and provide use cases for every check in your HSM. This will help to easy test state machine transitions under various conditions. For current state machine we don’t have any condition blocks, so we are not required to create service locator and we may use ServiceLocator.Empty instance.
+
+Create state machine
+So we created states, events and we don’t need service locator according we don’t have conditions on it. Now, we are able to create state machine class.
+
+To create state machine class you have to create kotlin class with the name of state machine. The name of state machine should reflect the name of active object for which it is created. Such the name should be <AO name>StateMachine, e.g. AlarmStateMachine, BluetoothStateMachine, etc.
+
+For out example we will create PingPongStateMachine
+```kotlin
+class PingPongStateMachine(
+    initialState: State = App()
+) : StateMachine.Abstract(initialState, ServiceLocator.Empty())
+```
+Now, we may use the state machine for active object. How to use it described in document[2]
