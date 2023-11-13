@@ -184,7 +184,7 @@ interface State {
         protected abstract suspend fun initialTransitionState(context: StateMachineContext): State
 
         @OptIn(DelicateStateMachineApi::class)
-        override suspend fun onEnter(context: StateMachineContext) {
+        final override suspend fun onEnter(context: StateMachineContext) {
             context.operateStateMachine().nextState(initialTransitionState(context))
         }
 
