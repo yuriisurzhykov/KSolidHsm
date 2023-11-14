@@ -11,15 +11,13 @@ import com.yuriisurzhykov.ksolidhsm.strategy.EventProcessResult.Ignore
 import com.yuriisurzhykov.ksolidhsm.strategy.EventProcessResult.TransitionTo
 
 /**
- *  ProcessResult is a strategy pattern for processing events. When [State] consume [Event],
- *  the last one should return result of what to do after checking the type of event.
- *  There 3 main strategies:
+ *  ProcessResult is a strategy pattern for processing events. The [State.processEvent] function
+ *  must return one of these 4 ProcessResult strategies:
  *  - [TransitionTo] moves [StateMachine] to the state provided in [TransitionTo.state].
- *  - [Unknown] causes [StateMachine] to talk to [State] parent if it exists, and calls [State.processEvent]
- *  on parent state.
+ *  - [Unknown] Causes [StateMachine] to talk to [State] parent if it exists, and calls [State.processEvent]
+ *  on parent state
  *  - [Ignore] does nothing, indicates only that event is processed and everything is ok.
- *  - [Handled] does nothing with an event, but executes [Handled.eventOperation] when strategy is
- *  being executed.
+ *  - [Handled] executes lambda function passed to class by [State]
  * */
 sealed interface EventProcessResult {
 
@@ -56,6 +54,10 @@ sealed interface EventProcessResult {
         }
     }
 
+    /**
+     *  @property eventOperation is an optional logic wrapped into lambda function that will be
+     *  executed when [State] returning from [State.processEvent] function.
+     * */
     class Handled(
         private val eventOperation: (suspend (StateMachineContext) -> Unit)? = null
     ) : EventProcessResult {
