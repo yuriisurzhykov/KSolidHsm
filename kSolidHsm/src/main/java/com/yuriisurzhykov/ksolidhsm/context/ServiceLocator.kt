@@ -20,8 +20,8 @@ package com.yuriisurzhykov.ksolidhsm.context
  *      }
  *  }
  *  ```
- *  By doing this for your state machine, you provide the implementation for your general
- *  [ServiceLocator] interface.
+ *  After you defined [ServiceLocator] for your state machine you have to provide instance of your
+ *  service locator to constructor of your state machine.
  * */
 interface ServiceLocator {
 

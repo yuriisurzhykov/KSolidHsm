@@ -158,20 +158,17 @@ interface State {
     }
 
     /**
-     *  `Transient` is an abstract class representing a transient state in a state machine. It
-     *  extends the [State] interface, providing specific implementations and behaviors suitable
-     *  for states that are temporary or intermediate within the state machine's lifecycle.
-     *  This class finalizes key functions from the [State] interface, such as [processEvent]
-     *  and [onEnter], to standardize behavior and prevent unnecessary overrides in derived classes.
-     *  It also introduces an abstract function, [initialTransitionState], which must be implemented
-     *  by subclasses to define the transition from this transient state to another state during
-     *  [onEnter].
+     *  A Transient is a state that initiates a transition to another state upon entering.
+     *  It extends [Normal] to inherit its behavior and overrides [onEnter] to potentially
+     *  initiate a transition using [initialTransitionState]. In addition, it overrides [processEvent]
+     *  with `final` modifier so children are not allowed to override them and place the process
+     *  event logic.
      */
     abstract class Transient : State {
 
         /**
-         *  Overrides the [State.processEvent] function with ‘final’ in order to prevent unnecessary
-         *  overriding in derived classes.
+         *  Overrides the [processEvent] and [onEnter] function in order to prevent unnecessary
+         *  overriding in child classes.
          * */
         final override suspend fun processEvent(
             event: Event,
@@ -186,19 +183,11 @@ interface State {
          */
         protected abstract suspend fun initialTransitionState(context: StateMachineContext): State
 
-        /**
-         *  Overrides the [State.onEnter] function with ‘final’ in order to prevent overriding by
-         *  derived classes.
-         * */
         @OptIn(DelicateStateMachineApi::class)
         final override suspend fun onEnter(context: StateMachineContext) {
             context.operateStateMachine().nextState(initialTransitionState(context))
         }
 
-        /**
-         *  Default implementation of [State.onExit] that does nothing. May be overridden by
-         *  derived states.
-         * */
         override suspend fun onExit(context: StateMachineContext) {
         }
     }

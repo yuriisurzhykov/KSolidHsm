@@ -3,10 +3,10 @@ package com.yuriisurzhykov.ksolidhsm.context
 import com.yuriisurzhykov.ksolidhsm.StateMachine
 
 /**
- *  In the terms of [StateMachine], a context means environment where states should
- *  be and where they will be applied. In other words context is mostly reference
- *  to current state machine instance. It also keeps the reference to [ServiceLocator]
- *  instance which holds dependencies for current state machine.
+ *  In the terms of [StateMachine] context means environment where states should
+ *  be and where it will be applied. In other words context is mostly reference
+ *  to current state machine instance. In addition to this it holds reference to
+ *  [ServiceLocator] instance which holds dependencies for current state machine.
  * */
 interface StateMachineContext {
 

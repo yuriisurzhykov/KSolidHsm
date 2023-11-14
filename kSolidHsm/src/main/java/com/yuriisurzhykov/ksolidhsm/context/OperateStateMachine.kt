@@ -3,10 +3,6 @@ package com.yuriisurzhykov.ksolidhsm.context
 import com.yuriisurzhykov.ksolidhsm.states.State
 import com.yuriisurzhykov.ksolidhsm.StateMachine
 
-/**
- *  `OperateStateMachine` interface provides ability for external classes that is not StateMachine,
- *  to call logic inside of [StateMachine] to proceed to the next state.
- * */
 interface OperateStateMachine {
 
     /**

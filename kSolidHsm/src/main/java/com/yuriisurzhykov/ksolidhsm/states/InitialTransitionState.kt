@@ -1,13 +1,8 @@
 package com.yuriisurzhykov.ksolidhsm.states
 
-import com.yuriisurzhykov.ksolidhsm.StateMachine
 import com.yuriisurzhykov.ksolidhsm.context.StateMachineContext
 
-/**
- *  Interface [InitialTransitionState] provides declaration of what states with initial transitions
- *  can do. Now its only one method [initialTransitionState], that called by [StateMachine] after
- *  [State.onEnter].
- * */
+
 interface InitialTransitionState {
 
 
