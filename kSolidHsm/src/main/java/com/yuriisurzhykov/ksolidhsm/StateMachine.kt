@@ -5,7 +5,6 @@ import com.yuriisurzhykov.ksolidhsm.context.DelicateStateMachineApi
 import com.yuriisurzhykov.ksolidhsm.context.OperateStateMachine
 import com.yuriisurzhykov.ksolidhsm.context.ServiceLocator
 import com.yuriisurzhykov.ksolidhsm.context.StateMachineContext
-import com.yuriisurzhykov.ksolidhsm.exceptions.IllegalInheritanceException
 import com.yuriisurzhykov.ksolidhsm.exceptions.StateMachineInitializedException
 import com.yuriisurzhykov.ksolidhsm.states.InitialTransitionState
 import com.yuriisurzhykov.ksolidhsm.states.State
@@ -18,12 +17,10 @@ import kotlinx.coroutines.flow.asStateFlow
  * In HSM, every state may have derived states.
  * Extends [OperateStateMachine] for state operation and [ContextProvider] for context provisioning.
  */
-@Suppress("KDocUnresolvedReference")
 interface StateMachine : OperateStateMachine, ContextProvider {
 
     /**
-     * Processes the given [event] and returns the new [State]. In terms of HSM that tied to
-     * specific AO([ActiveObject]), the event is the one that AO received.
+     * Processes the given [event] and returns the new [State].
      *
      * @param event The event to process.
      * @return The new state after processing the event.
@@ -62,11 +59,9 @@ interface StateMachine : OperateStateMachine, ContextProvider {
         /**
          * Initializes the state machine if it hasn't been initialized already.
          * On initialization, invokes [State.onEnter] on the [initialState]. It has __final__
-         * modifier to no one will change the logic for state machine initialization.
+         * modifier so no one will change the logic for state machine initialization.
          *
          * @throws IllegalStateException If the state machine is already initialized.
-         * @throws IllegalInheritanceException If next state is derived from current state
-         *          and doesn't override transition
          */
         final override suspend fun initialize() {
             if (!hasInitialized) {
