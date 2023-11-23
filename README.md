@@ -1,4 +1,4 @@
-![Repository header](repo-header.png)
+![Repository header](repo-header.jpg)
 # KSolidHsm
 ### Description
 This library represents HSM(hierarchical state machine) written in kotlin with usage of suspend function as main blocking way for execution.
